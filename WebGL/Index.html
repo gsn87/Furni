@@ -119,6 +119,9 @@
                 camera.lookAt(scene.position); 
                 scene.add(camera); 
 				
+				var axisHelper = new THREE.AxisHelper( 200 ); 
+				scene.add( axisHelper );
+				
                 // Create the cube 
                 var boxGeometry = new THREE.BoxGeometry(200.0, 200.0, 200.0); 
 				
