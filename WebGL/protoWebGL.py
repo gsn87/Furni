@@ -6,10 +6,10 @@ sys.path.append(FREECAD_PATH)
 import FreeCAD
 import exportWebGL
 
-DOC_PATH = "C:\Users\GS\Documents\CAD\\trunk\OSBTable\OSBTable.FCStd"
+DOC_PATH = "C:\Users\Guillaume\Desktop\gsn\cad\Furni\\trunk\CAD_Stool_v1\TestAssemble.FCStd"
 
 doc = FreeCAD.open(DOC_PATH)
-stool = [doc.Objects[17]]
+stool = [doc.Objects[25]]
 
 exportWebGL.export(stool, './output.html')
 

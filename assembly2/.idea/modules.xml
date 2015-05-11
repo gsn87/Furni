@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/FreeCAD_assembly2-master.iml" filepath="$PROJECT_DIR$/.idea/FreeCAD_assembly2-master.iml" />
+      <module fileurl="file://$USER_HOME$/Desktop/gsn/cad/Furni/trunk/.idea/trunk.iml" filepath="$USER_HOME$/Desktop/gsn/cad/Furni/trunk/.idea/trunk.iml" />
+    </modules>
+  </component>
+</project>
+
