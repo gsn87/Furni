@@ -1,65 +1,87 @@
 
-FREECADPATH_WIN = "C:\Program Files (x86)\FreeCAD 0.15\\bin"
-ASSEMBLY2 = "C:\Users\Guillaume\Desktop\gsn\cad\Furni\\trunk\FreeCAD_assembly2-master"
+FREECADPATH_WIN = "C:\Users\GS\Documents\CAD\\trunk\FreeCAD 0.15\\bin"
 import sys
 sys.path.append(FREECADPATH_WIN)
-sys.path.append(ASSEMBLY2)
 
 import FreeCAD
-from assembly2solver import solveConstraints
 from importPart import importPart
+import time
+
+def generate_interval(min, max, step):
+    x = []
+    for i in range(min, max+step, step):
+        x.append(i)
+    return x
 
 # Dimensions in mm
-LENGTH = 370. #length of CenterPart & SideParts
-L1 = 160. #width of CenterPart
-L2 = 110. #width of SidePart
+# LENGTH = [300, 320, 340, 360, 380, 400] #length of CenterPart & SideParts
+LENGTH = generate_interval(250, 450, 50)
+#L1 = [140, 160, 180, 200] #width of CenterPart
+L1 = generate_interval(140, 260, 20)
+L2 = [115] #width of SidePart
 THICKNESS = 18. #thikness of material
-HEIGHT = 430. #height of stool
+HEIGHT = generate_interval(350, 550, 50) #height of stool
 GAP = 10. #free gap between CenterPart & SidePart
+print len(L2)*len(L1)*len(LENGTH)*len(HEIGHT)
+raw_input()
 
-# CenterPart #
-# Set length and width from first Sketch (pad)
-doc = FreeCAD.open(u"C:/Users/Guillaume/Desktop/gsn/cad/Furni/trunk/CAD_Stool_v1/CenterPart.FCStd")
-doc.Sketch.setDatum("Length", LENGTH)
-doc.Sketch.setDatum("Width", L1)
-# Set thickness from second Sketch001 (pocket)
-doc.Sketch001.setDatum("Thickness", -THICKNESS)
-doc.recompute()
-doc.save()
+doc_CP = FreeCAD.open("C:\Users\GS\Documents\CAD\\trunk\CAD_Stool_v1\CenterPart.FCStd")
+doc_SP = FreeCAD.open("C:\Users\GS\Documents\CAD\\trunk\CAD_Stool_v1\SidePart.FCStd")
+doc_LP = FreeCAD.open("C:\Users\GS\Documents\CAD\\trunk\CAD_Stool_v1\LinkPart.FCStd")
+doc_Leg = FreeCAD.open("C:\Users\GS\Documents\CAD\\trunk\CAD_Stool_v1\LegPart.FCStd")
+doc_Stool = FreeCAD.open("C:\Users\GS\Documents\CAD\\trunk\CAD_Stool_v1\TestAssemble.FCStd")
 
-# SidePart #
-# Set length and width from first Sketch (pad)
-doc = FreeCAD.open(u"C:/Users/Guillaume/Desktop/gsn/cad/Furni/trunk/CAD_Stool_v1/SidePart.FCStd")
-doc.Sketch.setDatum("Length", LENGTH)
-doc.Sketch.setDatum("Width", -L2)
-# Set thickness from second Sketch001 (pocket)
-doc.Sketch001.setDatum("Thickness", THICKNESS)
-doc.recompute()
-doc.save()
+for length in LENGTH:
+    for l1 in L1:
+        for h in HEIGHT:
+            for l2 in L2:
+                # CenterPart #
+                # Set length and width from first Sketch (pad)
 
-# LinkPart #
-doc = FreeCAD.open(u"C:/Users/Guillaume/Desktop/gsn/cad/Furni/trunk/CAD_Stool_v1/LinkPart.FCStd")
-doc.Sketch.setDatum("Length", GAP + L1/2. -30.)
-doc.recompute()
-doc.save()
 
-# LegPart #
-doc = FreeCAD.open(u"C:/Users/Guillaume/Desktop/gsn/cad/Furni/trunk/CAD_Stool_v1/LegPart.FCStd")
-doc.Sketch.setDatum("Height", -HEIGHT)
-doc.Sketch.setDatum("Length", LENGTH-110.)
-#doc.Sketch001.setDatum("Thickness", THICKNESS)
-doc.recompute()
-doc.save()
+                doc_CP.Sketch.setDatum("Length", length)
+                doc_CP.Sketch.setDatum("Width", l1)
+                # Set thickness from second Sketch001 (pocket)
+                doc_CP.Sketch001.setDatum("Thickness", -THICKNESS)
+                doc_CP.recompute()
+                doc_CP.save()
 
-doc = FreeCAD.open(u"C:/Users/Guillaume/Desktop/gsn/cad/Furni/trunk/CAD_Stool_v1/TestAssemble.FCStd")
-update_part = {}
-for obj in doc.Objects:
-    if obj.TypeId == 'Part::FeaturePython' and hasattr(obj,"sourceFile"):
-        importPart(obj.sourceFile, obj.Label)
-doc.recompute()
-doc.save()
+                # SidePart #
+                # Set length and width from first Sketch (pad)
 
-#solveConstraints(doc)
+                doc_SP.Sketch.setDatum("Length", length)
+                doc_SP.Sketch.setDatum("Width", -l2)
+                # Set thickness from second Sketch001 (pocket)
+                doc_SP.Sketch001.setDatum("Thickness", THICKNESS)
+                doc_SP.recompute()
+                doc_SP.save()
 
+                # LinkPart #
+                doc_LP.Sketch.setDatum("Length", GAP + l1/2. -30.)
+                doc_LP.recompute()
+                doc_LP.save()
+
+                # LegPart #
+                doc_Leg.Sketch.setDatum("Height", -h)
+                doc_Leg.Sketch.setDatum("Length", length-110.)
+                #doc.Sketch001.setDatum("Thickness", THICKNESS)
+                doc_Leg.recompute()
+                doc_Leg.save()
+
+                update_part = {}
+                for obj in doc_Stool.Objects:
+                    if obj.TypeId == 'Part::FeaturePython' and hasattr(obj,"sourceFile"):
+                        importPart(obj.sourceFile, obj.Label)
+                doc_Stool.recompute()
+                doc_Stool.save()
+
+                sys.path.append('./WebGL')
+                export_list = []
+                import exportWebGL as wgl
+                for obj in doc_Stool.Objects:
+                    if obj.isDerivedFrom("Part::Feature"):
+                        export_list.append(obj)
+
+                wgl.export(export_list, './output/Stool'+str(length)+str(l1)+str(h)+str(l2)+'.js','Stool'+str(length)+str(l1)+str(h)+str(l2))
 
 print "done"
