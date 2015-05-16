@@ -28,135 +28,38 @@ tab = "                " # the tab size
 wireframeStyle = "faceloop" # this can be "faceloop", "multimaterial" or None
 cameraPosition = None # set this to a tuple to change, for ex. (0,0,0)
 linewidth = 1
-template = """<!DOCTYPE html>
-    <html>
-    <head>
-        <title>FreeCAD model</title>
-        <script src="./js/three.min.js"></script>
-        <script src="./js/Detector.js"></script>
-        <script src="./js/CanvasRenderer.js"></script>
-        <script src="./js/Projector.js"></script>
-        <div id="WebGLCanvas">
-    </head>
-    <body>
-        <script>
-            // Set up scene and camera
-            var scene, camera;
-
-            // x, y and z rotation
-            var xRotation = 0.0;
-            var yRotation = 0.0;
-            var zRotation = 0.0;
-
-            initializeScene();
-
-            animateScene();
-
-            /**
-             * Initialze the scene.
-             */
-
-            function initializeScene(){
-                if(Detector.webgl){
-                    renderer = new THREE.WebGLRenderer({antialias:true});
-                } else {
-                    renderer = new THREE.CanvasRenderer();
-                }
-
-                // Set the background color of the renderer to black, with full opacity
-                renderer.setClearColor(0x000000, 1);
-
-                // Get the size of the render area
-                canvasWidth = 600;
-                canvasHeight = 500;
-
-                // Set the renderers size to the content areas size
-                renderer.setSize(canvasWidth, canvasHeight);
-
-                // Get the DIV element from the HTML document by its ID and append the renderers DOM
-                // object to it
-                document.getElementById("WebGLCanvas").appendChild(renderer.domElement);
-
-                scene = new THREE.Scene();
-
-                camera = new THREE.PerspectiveCamera(45, canvasWidth / canvasHeight, 1, 10000);
-                camera.position.set(2000, 0, 900);
-                camera.lookAt(scene.position);
-				camera.rotation.z = 90 * Math.PI / 180;
-                scene.add(camera);
-
-				//var axisHelper = new THREE.AxisHelper( 200 );
-				//scene.add( axisHelper );
-
-				//placeholder object
-				$ObjectsData
-				//placeholder object
-
-				var basematerial = new THREE.MeshBasicMaterial( { color: 0xcccccc } );
-                stoolMesh = new THREE.Mesh( geom, basematerial );
-                scene.add( stoolMesh );
-
-            }
-
-            /**
-             * Animate the scene and call rendering.
-             */
-            function animateScene(){
-                // At last, we update the rotation values and assign it to the mesh's rotation.
-
-                // Increase the x, y and z rotation of the cube
-                xRotation += 0.03;
-                yRotation += 0.02;
-                zRotation += 0.04;
-				scene.traverse( function( node ) {
-					if ( node instanceof THREE.Mesh || node instanceof THREE.Line) {
-        // insert your code here, for example:
-						node.rotation.z += 0.01
-					}
-				} );
-                //boxMesh.rotation.set(xRotation, yRotation, zRotation);
-				//stoolMesh.rotation.y += 0.0
-                // Define the function, which is called by the browser supported timer loop. If the
-                // browser tab is not visible, the animation is paused. So 'animateScene()' is called
-                // in a browser controlled loop.
-                requestAnimationFrame(animateScene);
-
-                // Map the 3D scene down to the 2D screen (render the frame)
-                renderScene();
-            }
-
-            /**
-             * Render the scene. Map the 3D world to the 2D screen.
-             */
-            function renderScene(){
-                renderer.render(scene, camera);
-            }
-        </script>
-    </body>
-</html>"""
+template = """var $ModuleName = {
+    geom : function (scene) {
+        //placeholder object
+        $ObjectsData
+        //placeholder object
+    }
+}
+"""
 
 
 if open.__module__ == '__builtin__':
     pythonopen = open
 
-def export(exportList,filename):
+def export(exportList,filename, param_list):
     "exports the given objects to a .html file"
 
-    html = getHTML(exportList)
+    html = getHTML(exportList, param_list)
     outfile = pythonopen(filename,"wb")
     outfile.write(html)
     outfile.close()
     #FreeCAD.Console.PrintMessage(translate("Arch","successfully written ")+filename+"\n")
 
-def getHTML(objectsList):
+def getHTML(objectsList, param_list):
     "returns the complete HTML code of a viewer for the given objects"
-
+    m = template.replace("$ModuleName",param_list)
     # get objects data
     objectsData = ''
     for obj in objectsList:
         objectsData += getObjectData(obj)
     #t = template.replace("$CameraData",getCameraData())
-    t = template.replace("$ObjectsData",objectsData)
+    t = m.replace("$ObjectsData",objectsData)
+
     return t
 
 def getCameraData():
@@ -184,7 +87,6 @@ def getObjectData(obj,wireframeMode=wireframeStyle):
 
     result = ""
     wires = []
-
     if obj.isDerivedFrom("Part::Feature"):
         fcmesh = obj.Shape.tessellate(0.1)
         result = "var geom = new THREE.Geometry();\n"
